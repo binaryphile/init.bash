@@ -1,150 +1,73 @@
 init.bash - Bash Init File Replacement
 ======================================
 
-Why replace **.bashrc** and **.bash\_profile**?
+Bash's regular initialization files, **~/.bashrc** and
+**~/.bash\_profile** are a bit of a hack.  They are only two files, but
+they serve several different purposes:
 
-Have you ever been confused about which init file a particular setting
-belongs in?
+-   **environment variables** - load environment variables once, that
+    are then inherited by child processes, while allowing the user to
+    interactively modify them in child shells and let the modified
+    values propagate.
 
-Have you tried sending a remote command with "ssh \[host\] \[command\]",
-only to have it fail due to an environment variable or alias not being
-found?
+-   **command definition** - enable definition of custom aliases and
+    functions.  Most users alias `ls` into something more friendly, for
+    example.
 
-Would you like maintenance of your files to be easier and more sensible?
+-   **login tasks** - run interactive or "slow" shell-related tasks once
+    at the beginning of a user's session.  The `fortune` command is one
+    example, but you might do something like automatically bring up a
+    vpn connection to a remote service.  Not the kind of thing you want
+    performed every time you open a new terminal.
 
-These may be minor annoyances, but as your files grow in complexity they
-can become a real bother. They are symptoms of the poor mapping of the
-two init files to the functions they serve. **init.bash** (hereafter
-just *init*) solves these problems with better naming, organization and
-intelligence.
+-   **general configuration** - configure bash settings you want for all
+    shells, interactive or otherwise, such as setting the umask
+    filesystem permission mask.
 
-To use init, you symlink both .bashrc as well as .bash\_profile to
-**init.bash**. init takes care of determining which settings should be
-loaded based on how bash is being invoked, whether it is a local console
-session, ssh or otherwise.
+-   **interactive settings** - settings which only apply to terminal
+    sessions where you interact with a prompt, such as setting a fancy
+    prompt that uses color and shows git status.  Normally such settings
+    won't hurt non-interactive shells, but if it's just as easy to not
+    load them, why should they be when they aren't needed?
 
-Features
---------
+Knowing which file to put each kind of setting in takes a bit of
+experience.  However, as old and venerable as these files are, they can
+still be surprising even when you know what you are doing.
 
--   **organization** - different types of settings are categorized and
-    appear in well-named individual files
+For example, it's easy to get excited about the possibility of doing
+remote management when you learn that ssh can send individual commands:
+`ssh me@remotehost ls`.  However, try running something from your home
+bin directory, or one of your aliases and you'll get "command not
+found".  Why?
 
--   **consistency across invocation methods** - all of the settings
-    appropriate for bash's invocation method are loaded (interactive,
-    login, etc.) - get your environment variables when invoking a remote
-    command via ssh, for example.
+The reason is that there are many ways of arriving at a bash session and
+they trigger loading of .bashrc and .bash_profile differently.  A quick
+google search for a graphic of the decision tree bash performs when
+deciding which file to load is remarkably complex.  In the end, the
+process doesn't map perfectly to just two files, at least not without
+additional help in the form of logic within the init files themselves.
 
--   **modularity** - initialization specific to any local software
-    package (such as **git** aliases or **nvm** environment variables)
-    is isolated in its own set of files
+Enter init.bash
+---------------
 
--   **app detection** - local apps are detected before loading
-    their settings. If one machine doesn't have a particular package,
-    its settings will not be loaded. Simple dependency ordering is
-    provided as well.
+If you've gotten this far, I imagine that like me, you have a fairly
+complex set of init files.  I also imagine that you deal with multiple
+systems and maybe even platforms, with varying levels of control over
+them.  Some systems have all of your command line toys, while others are
+more spartan and may not provide sudo access.  **init.bash** handles all
+of these by doing a few things well:
 
--   **validation** - (optional) if you like Test-Driven Development,
-    this is TDD for bash files. Create a settings test, see it fail and
-    then get it to pass with the desired settings. Checked
-    automatically, once per login session.
+-  **one entrypoint** - init.bash is the same file no matter which way
+   bash has been started.  ~/.bashrc and ~/.bash\_profile (and
+   ~/.profile, if you want) are symlinked to one script, init.bash.
+   Instead of worrying about how bash was started, you only worry about
+   which of the categories I outlined at the beginning applies to your
+   setting.  init.bash has the intelligence to sort out the rest.
 
--   **maintainability** - well-named functions and variables, where
-    necessary, make the code readable. All of which evaporates without a
-    trace at the end of initialization so as not to clutter the shell.
+-  **separate, well-named settings files** - environment variables go in
+   **env.bash**.  Interactive settings go in **interactive.bash**.
+   Login tasks go in **login.bash**, etc.  No mixing of init's
+   intelligence code with the settings, which keeps the settings files
+   simple.  Just settings.
 
-Installation and Usage
-----------------------
-
-The files in this directory form the basis for init. To use them, copy
-to your own dotfile repository and customize for your environment. Then
-symlink **~/.bashrc** and **~/.bash\_profile** to init.bash.
-
-The easiest way to start is to copy your current bash configs to the
-following files:
-
--   the **app/** folder - rename the folder and create an empty one,
-    with a subfolder for each app's settings (such as git or mysql)
-
--   the following general (not app-specific) settings files:
-
-```
-                              # type                    when loaded
-bash                          # ----                    -----------
-├── bash.bash                 # general bash settings   always
-├── cmds.bash                 # functions and aliases   always
-├── env.bash                  # environment variables   once per login
-├── interactive.bash          # interactive settings    all interactive sessions
-└── interactive-login.bash    # interactive one-time    once per login, if interactive
-```
-
-In addition, there is a directory for settings specific to each
-application package you configure:
-
-```
-bash
-└── apps/                 # settings for specific packages, directory per package
-     ├── chruby/           # an example app
-     │   ├── cmds.bash     # my app-specific custom functions/aliases
-     │   ├── deps          # an optional list of other apps to configure first
-     │   ├── detect.bash   # optional app detection expression
-     │   ├── env.bash      # app-specific environment vars
-     │   └── init.bash     # to source the app-provided initialization, if any (e.g. a script or eval command)
-     └── .../              # etc.
-```
-
-The files are named with the .bash extension to hint text editor syntax
-highlighting, but they can be named whatever you want if you modify
-init.bash.
-
-Normally, an app will be detected by the existence of a command of the
-same name as the directory under apps/ (e.g. git).
-
-If that is not sufficient, for example if an app can only be detected by
-the existence of a file or directory on the filesystem, then you can
-write an expression to detect it in **detect.bash** and that will be
-used instead, automatically.
-
-Main Code Tree
---------------
-
-Aside from the settings files listed above, the following is the
-structure of the project:
-
-```
-bash
-├── init.bash   # the primary script
-├── apps.bash   # code for loading app settings, with detection
-└── lib/
-     └── initutil.bash     # utility library
-```
-
-Assertions and Validation Code
-------------------------------
-
-Settings assertions are kept in their own subdirectory along with the
-validation code. App validations have their own files in the
-**validate/apps/** folder:
-
-```
-bash
-└── validate/   # all validation-related code and assertions
-    ├── validate.bash     # code to run validations
-    ├── bash.bash         # assertions for the corresponding settings file
-    ├── cmds.bash         # ditto
-    ├── env.bash          # ditto
-    ├── interactive.bash  # ditto
-    ├── interactive-login.bash # ditto
-    ├── apps.bash         # code to run app validations
-    ├── apps/
-    │   ├── chruby.bash   # assertions for app settings
-    │   └── ...
-    └── lib/
-         └── truth.bash    # assertion library
-```
-
-Validation is optional and can be disabled in init.bash.
-
-Validation is done with the help of my own **truth.bash** assertion
-library, inspired by Google's [Truth] framework for Java.
-
-  [Truth]: https://truth.dev/
+-   
