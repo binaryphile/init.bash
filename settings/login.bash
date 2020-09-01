@@ -6,4 +6,4 @@
 # ========
 
 # # make sure system messages are turned off for ssh logins
-# TestAndTouch $HOME/.hushlogin
+# touch $HOME/.hushlogin

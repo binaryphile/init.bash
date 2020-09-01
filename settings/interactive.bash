@@ -12,8 +12,6 @@
 # INPUTRC=$HOME/dotfiles/bash/inputrc
 
 # # history settings - create an eternal bash history of all commands.
-# # merge the history from all sessions into one on session exit.
-# # still allow separate sessions to keep their own history while live.
 # historymerge () {
 #   nl <"$HOME"/.bash_history |
 #     sort -k2 |

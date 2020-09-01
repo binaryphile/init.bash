@@ -3,4 +3,4 @@
 # normally you don't need this if the test is simply whether a command is
 # available on the cli.
 
-# IsDir /usr/local/share/chruby
+# [[ -d /usr/local/share/chruby ]]

@@ -2,7 +2,7 @@
 # test for existence of commands before loading.  allow ordering of loading by
 # dependencies.
 
-pushd $Here/apps >/dev/null
+pushd $Root/apps >/dev/null
 
 # list the app dirs, with ordering based on "deps" file in app dir
 AppList=$(ListDir . | Filter IsDir | Filter IsApp | OrderByDependencies)
