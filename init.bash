@@ -14,7 +14,7 @@ Globbing off    # turn off globbing until I need it
 # and login actions.
 { ShellIsLogin || [[ $1 == reload ]]; } && source $Root/settings/env.bash
 
-source $Root/lib/apps.bash        # app-specific environment and commands, see apps/
+source $Root/lib/apps.bash        # app-specific environment and commands, see apps folder
 source $Root/settings/base.bash   # general configuration, always loaded
 source $Root/settings/cmds.bash   # aliases and functions
 
