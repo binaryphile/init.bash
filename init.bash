@@ -22,10 +22,7 @@ source $Root/settings/cmds.bash   # aliases and functions
 ShellIsInteractive && source $Root/settings/interactive.bash
 
 # one-time, interactive-only login tasks and configuration validation
-{ ShellIsInteractiveAndLogin || [[ $1 == reload ]]; } && {
-  source $Root/settings/login.bash
-  source $Root/lib/validate.bash
-}
+{ ShellIsInteractiveAndLogin || [[ $1 == reload ]]; } && source $Root/settings/login.bash
 
 [[ $1 == reload ]] && echo reloaded
 
