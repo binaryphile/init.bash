@@ -76,6 +76,10 @@ handles all of these by doing a few things well:
     aren't loaded. If you get rid of an app, get rid of all of its
     settings by removing its folder with a single `rm -rf`.
 
+init also makes your environment variables, functions and aliases
+available to *all* sessions, including non-interactive ones like ssh
+remote commands.  (aliases are enabled in lib/initutil.bash).
+
 Project Structure
 -----------------
 
