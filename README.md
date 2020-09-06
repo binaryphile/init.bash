@@ -105,19 +105,19 @@ Settings
 The settings folders contains your actual settings. It's broken into
 several files.
 
-init.bash loads settings in the following order. Here, "general" means
-anything not specific to one of the installed applications.
-
 General settings files are loaded after app-specific ones, in case an
 app wants an initialization file sourced that might override one of your
-settings. Having your general settings come after app code gives you
-control over the final state of settings.
+settings.  Here, "general" means anything not specific to one of the
+installed applications.  Having your general settings come after app
+code gives you control over the final state of settings.
 
 The one exception is env.bash, which loads first so you can set PATH.
 You may need PATH to include your local bin directory in order for your
 apps to be detected so their settings are loaded. Note, it is not so you
 can set environment variables to configure apps. Those go in the
 respective env.bash files in the app subdirectories.
+
+init.bash loads settings in the following order:
 
 -   **env.bash** - general environment variables such as PATH
 
@@ -133,7 +133,8 @@ respective env.bash files in the app subdirectories.
 
 -   **login.bash** - one-time login tasks
 
-Each of these is loaded under the proper circumstances, shown below.
+Each of these is loaded under the proper circumstances, shown in the
+table below.
 
 In the "when loaded" column in the table, "interactive" means a
 command-prompt session, as opposed to a remote ssh command (e.g.
@@ -191,9 +192,9 @@ such as `[[ -d /some/app/directory ]]`. If there is a detect.bash
 present, init will use its result to determine whether to load the app's
 settings.
 
-Each app's directory can have the following files, loaded in this order.
-Typically you will only need some combination of env.bash, init-app.bash
-and cmds.bash, unless you have bash completions.
+Each app's directory can have the following settings files, loaded in
+this order.  Typically you will only need some combination of env.bash,
+init-app.bash and cmds.bash, unless you have bash completions.
 
 -   **env.bash** - app-specific environment variables - loaded first so
     you can configure the app if it depends on env vars
@@ -234,26 +235,28 @@ bash was started in a large variety of situations. There are a number of
 diagrams mapping this out, but even if you go by the docs, you aren't
 going to get [the whole picture].
 
-I was frustrated by the fact that beginners have to have the difference
-between bash\_profile and bashrc explained carefully because they are
+I was frustrated by the fact that beginners need the difference between
+
+bash\_profile and bashrc explained carefully because they are
 nonintuitive, starting with their names. I was also frustrated that I
 couldn't properly anticipate what was going to happen when I ssh'ed a
 remote command or sudo'ed with varying options. I just wanted to stop
 having to think about it.
 
-I experimented with varying approaches. The first was to ensure that,
+I experimented with varying approaches. The first was to ensure,
 similarly to how bash\_profile needs to source bashrc, that I sourced
 bash\_profile from bashrc (with loop detection of course). That really
 doesn't work, because it is both confusing as well as making the
 environment variables defeat interactive change by the user without some
 added cleverness.
 
-I finally realized that the invocation of the files was too limiting to
-accomplish what I wanted (consistency), and so I simply merged the files
-together and symlinked to one of them. It required conditionals to
-detect the varous bash modes with sections for the appropriate settings,
-but it worked much better. Unfortunately, it wasn't very modular and no
-one but me could read it. It was a mess, even with heavy commentary.
+I finally realized that the model of using two files itself was too
+  limiting to accomplish what I wanted (consistency), and so I simply
+  merged the files together and symlinked to one of them. It required
+  conditionals to detect the varous bash modes with sections for the
+  appropriate settings, but it worked much better. Unfortunately, it
+  wasn't very modular and no one but me could read it. It was a mess,
+  even with heavy commentary.
 
 init is my third revision. I'm much happier with it. The filenames
 clearly indicate what you should be concerned with putting in them. They
