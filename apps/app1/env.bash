@@ -1,3 +1,3 @@
 # env.bash - load app-related environment variables
 
-# export JRUBY_OPTS=--dev
+# export APP1_ENV_VAR=APP1
