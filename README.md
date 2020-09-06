@@ -230,8 +230,53 @@ however, to detect dependency cycles, nor to verify that what appears in
 the list correctly specifies another app. Bear that in mind, but I doubt
 you'll run into a situation where those things matter.
 
-Other Notes
------------
+Quotes and Globbing
+-------------------
+
+You'll notice I don't quote my variables in settings files or my code.
+That's not by mistake. Rather than quote everything, I prefer to turn
+off bash's features that force you to quote in the first place. These
+are globbing and  word-splitting on space. I employ two functions,
+`SplitSpace` and `Globbing`, to toggle those features, but all they are
+doing is changing IFS to newline and running shopt, respectively.
+However, after init is finished, space and globbing are turned back on
+for a normal shell experience.
+
+There are two places in your files where you need to be aware of the
+status of word-splitting and globbing. The first is in your functions
+and aliases. While the two features are turned off in init, your
+commands will run in the normal shell environment where the features
+have been reenabled. Write your commands with that in mind, i.e. use
+quotes around variable expansions. The second place is in any
+init-app.bash file. Because they are for sourcing third-party code, the
+two features are reenabled before calling init-app.bash, then turned
+back off when control is handed back to init.
+
+Utility Functions
+-----------------
+
+A couple notes about my own functions in the scripts. The first is that
+I employ UpperCamelCase for naming functions (and variables). Because
+init code has to play nice with whatever your apps provide, that is a
+simple and readable way to guarantee namespacing away from other code.
+Nobody uses it but me! (and now, perhaps you) It only takes a moment to
+get used to it once you understand the reason for it. Believe it or not,
+I have experienced name collisions in my init files, and have tried out
+a number conventions (long names, underscores) to combat it, but this is
+the simplest and most readable of them.
+
+The second note is that the library of utility functions
+(**lib/initutil.bash**) has its functions removed at the end of init so
+that they don't stick around in your shell session. The code knows to
+diff the names of the functions before and after the library is sourced,
+so it knows all of the functions defined in the library. At the end of
+init, it unsets all of these functions. If you want to add a function to
+the library, you can do so without worrying about having to clean it up;
+it will be cleaned up for you. If you don't want it cleaned up, don't
+put it in the library.
+
+Background
+----------
 
 init.bash was the result of frustrations from having to understand how
 bash was started in a large variety of situations. There are a number of
@@ -270,44 +315,5 @@ reliance on variables (and the accompanying unset statements).
 If you like init, feel free to hack on it. I will probably not take many
 submissions, but it is meant to be maintainable enough that you can suit
 it to your purposes. It's a complete basis, but only a basis.
-
-A few notes about my functions. The first is that I employ
-UpperCamelCase for naming functions (and variables). Because init code
-has to play nice with whatever your apps provide, that is a simple and
-readable way to guarantee namespacing away from other code. Nobody uses
-it but me! (and now, perhaps you) It only takes a moment to get used to
-it once you understand the reason for it. Believe it or not, I have
-experienced name collisions in my init files, and have tried out a
-number conventions (long names, underscores) to combat it, but this is
-the simplest and most readable of them.
-
-Another note is that you'll notice I don't quote my variables. That's
-not by mistake. Rather then quote everything, I prefer to turn off
-bash's features that force you to quote in the first place. This is
-word-splitting on space, and globbing. I employ two functions,
-SplitSpace and Globbing, to toggle those features, but all they are
-doing is changing IFS to newline and running shopt, respectively.
-However, after init is finished, space and globbing are turned back on
-for a normal shell experience.
-
-There are two places in your files where you need to be aware of the
-status of word-splitting and globbing. The first is in your functions
-and aliases. While the two features are turned off in init, your
-commands will run in the normal shell environment where the features
-have been reenabled. Write your commands with that in mind, i.e. use
-quotes around variable expansions. The second place is in any
-init-app.bash file. Because they are for sourcing third-party code, the
-two features are reenabled before calling init-app.bash, then turned
-back off when control is handed back to init.
-
-The last note is that the library of utility functions
-(**lib/initutil.bash**) has its functions removed at the end of init so
-that they don't stick around in your shell session. The code knows to
-diff the names of the functions before and after the library is sourced,
-so it knows all of the functions defined in the library. At the end of
-init, it unsets all of these functions. If you want to add a function to
-the library, you can do so without worrying about having to clean it up;
-it will be cleaned up for you. If you don't want it cleaned up, don't
-put it in the library.
 
   [the whole picture]: https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html
