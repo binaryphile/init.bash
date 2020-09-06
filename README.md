@@ -102,7 +102,7 @@ init.bash is the main script. Install it by symlinking ~/.bashrc and
 Settings
 --------
 
-The settings folders contains your actual settings. It's broken into
+The settings folder contains your actual settings. It's broken into
 several files.
 
 General settings files are loaded after app-specific ones, in case an
@@ -173,8 +173,7 @@ apps
 ```
 
 **deps** and **detect.bash** are typically not required, and the rest
-are all optional (do not need to be there for init to work). Of course,
-you'll want at least one file to actually have settings loaded from it.
+are all optional (do not need to be there for init to work).
 
 The apps folder contains a subdirectory for each app you want to
 configure. You can have any number of apps configured, but only those
@@ -252,7 +251,7 @@ added cleverness.
 I finally realized that the model of using two files itself was too
 limiting to accomplish what I wanted (consistency), and so I simply
 merged the files together and symlinked to one of them. It required
-conditionals to detect the varous bash modes with sections for the
+conditionals to detect the various bash modes with sections for the
 appropriate settings, but it worked much better. Unfortunately, it
 wasn't very modular and no one but me could read it. It was a mess, even
 with heavy commentary.
@@ -281,11 +280,11 @@ the simplest and most readable of them.
 Another note is that you'll notice I don't quote my variables. That's
 not by mistake. Rather then quote everything, I prefer to turn off
 bash's features that force you to quote in the first place. This is
-word-splitting on space, and globbing. I employ to functions, SplitSpace
-and Globbing, to toggle those features, but all they are doing is
-changing IFS to newline and running shopt, respectively. However, after
-init is finished, space and globbing are turned back on for a normal
-shell experience.
+word-splitting on space, and globbing. I employ two functions,
+SplitSpace and Globbing, to toggle those features, but all they are
+doing is changing IFS to newline and running shopt, respectively.
+However, after init is finished, space and globbing are turned back on
+for a normal shell experience.
 
 There are two places in your files where you need to be aware of the
 status of word-splitting and globbing. The first is in your functions
