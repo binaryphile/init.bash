@@ -236,7 +236,6 @@ diagrams mapping this out, but even if you go by the docs, you aren't
 going to get [the whole picture].
 
 I was frustrated by the fact that beginners need the difference between
-
 bash\_profile and bashrc explained carefully because they are
 nonintuitive, starting with their names. I was also frustrated that I
 couldn't properly anticipate what was going to happen when I ssh'ed a
@@ -251,12 +250,12 @@ environment variables defeat interactive change by the user without some
 added cleverness.
 
 I finally realized that the model of using two files itself was too
-  limiting to accomplish what I wanted (consistency), and so I simply
-  merged the files together and symlinked to one of them. It required
-  conditionals to detect the varous bash modes with sections for the
-  appropriate settings, but it worked much better. Unfortunately, it
-  wasn't very modular and no one but me could read it. It was a mess,
-  even with heavy commentary.
+limiting to accomplish what I wanted (consistency), and so I simply
+merged the files together and symlinked to one of them. It required
+conditionals to detect the varous bash modes with sections for the
+appropriate settings, but it worked much better. Unfortunately, it
+wasn't very modular and no one but me could read it. It was a mess, even
+with heavy commentary.
 
 init is my third revision. I'm much happier with it. The filenames
 clearly indicate what you should be concerned with putting in them. They
