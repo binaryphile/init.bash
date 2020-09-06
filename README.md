@@ -96,29 +96,191 @@ init.bash
 init.bash
 ---------
 
+init.bash is the main script. Install it by symlinking ~/.bashrc and
+~/.bash\_profile.
+
+Settings
+--------
+
+The settings folders contains your actual settings. It's broken into
+several files.
+
 init.bash loads settings in the following order. Here, "general" means
 anything not specific to one of the installed applications.
 
--   **settings/env.bash** - general environment variables such as PATH
+General settings files are loaded after app-specific ones, in case an
+app wants an initialization file sourced that might override one of your
+settings. Having your general settings come after app code gives you
+control over the final state of settings.
+
+The one exception is env.bash, which loads first so you can set PATH.
+You may need PATH to include your local bin directory in order for your
+apps to be detected so their settings are loaded. Note, it is not so you
+can set environment variables to configure apps. Those go in the
+respective env.bash files in the app subdirectories.
+
+-   **env.bash** - general environment variables such as PATH
 
 -   **app settings** - everything from the **/apps** directory
 
--   **settings/base.bash** - general bash settings, anything not covered
-    by other files
+-   **base.bash** - general bash settings, anything not covered by other
+    files
 
--   **settings/cmds.bash** - general functions and aliases
+-   **cmds.bash** - general functions and aliases
 
--   **settings/interactive.bash** - general interactive-mode settings
-    like history, prompt, etc.
+-   **interactive.bash** - general interactive-only settings like
+    history, prompt, etc.
 
--   **settings/login.bash** - one-time login tasks
+-   **login.bash** - one-time login tasks
 
-Each of these is loaded under the proper circumstances:
+Each of these is loaded under the proper circumstances, shown below.
 
-| File             | When Loaded       |
-|------------------|-------------------|
-| base.bash        | always            |
-| cmds.bash        | always            |
-| env.bash         | on login          |
-| login.bash       | on login          |
-| interactive.bash | interactive shell |
+In the "when loaded" column in the table, "interactive" means a
+command-prompt session, as opposed to a remote ssh command (e.g.
+`ssh me@remotehost ls`) or `bash -c`.
+
+Likewise, "login" means a shell which has inherited your environment.
+Typically this is a normal bash login shell (`-bash` or `bash --login`)
+but any environment which hasn't received the your environment will be
+treated as a login. This allows remote ssh commands, which don't run a
+login shell, to load the environment.
+
+| File             | When Loaded            |
+|------------------|------------------------|
+| base.bash        | always                 |
+| cmds.bash        | always                 |
+| env.bash         | login                  |
+| login.bash       | interactive login only |
+| interactive.bash | interactive shell      |
+
+Apps
+----
+
+The file structure for the apps directory follows:
+
+```
+apps
+├── app1
+│   ├── cmds.bash
+│   ├── deps
+│   ├── detect.bash
+│   ├── env.bash
+│   ├── init-app.bash
+│   └── interactive.bash
+└── app2
+    └── ...
+```
+
+**deps** and **detect.bash** are typically not required, and the rest
+are all optional (do not need to be there for init to work). Of course,
+you'll want at least one file to actually have settings loaded from it.
+
+The apps folder contains a subdirectory for each app you want to
+configure. You can have any number of apps configured, but only those
+which are detected by init.bash will be loaded.
+
+The normal detection is to simply look for a command available on the
+path which matches the name of the directory. If you add a new command,
+just name the directory after the command and it will be detected.
+
+Some applications don't have a command-line command to detect. In that
+case, you might need to check for the existence of a file or directory,
+or another arbitrary test. In such a case, you can create a file called
+**detect.bash** in the app's folder which has a detection expression,
+such as `[[ -d /some/app/directory ]]`. If there is a detect.bash
+present, init will use its result to determine whether to load the app's
+settings.
+
+Each app's directory can have the following files, loaded in this order.
+Typically you will only need some combination of env.bash, init-app.bash
+and cmds.bash, unless you have bash completions.
+
+-   **env.bash** - app-specific environment variables - loaded first so
+    you can configure the app if it depends on env vars
+
+-   **init-app.bash** - to source any app-specific code
+
+-   **cmds.bash** - app-specific functions and aliases
+
+-   **interactive.bash** - interactive-only settings, such as bash
+    completions
+
+Again, these files are loaded only under the appropriate circumstances.
+
+The last file available for apps is **deps**. You shouldn't normally
+need it. However, occasionally two apps might clash over a variable such
+as PROMPT\_COMMAND. Normally, app settings are loaded in an unspecified
+order, which means if one app sets an entire variable's contents, it
+will overwrite the value set by another app for the same variable. If
+the unfriendly app happens to be loaded second, that's too bad for the
+other.
+
+deps allows you to specify the directory name of another app to force
+that app to be loaded first. All it needs is the name of the directory
+as it appears under apps/. If there are multiple dependencies, you can
+list them one per line in a list.
+
+init is smart enough to detect transitive dependencies, should it come
+to that (a dependency with its own deps file). It is not smart enough,
+however, to detect dependency cycles, nor to verify that what appears in
+the list correctly specifies another app. Bear that in mind, but I doubt
+you'll run into a situation where those things matter.
+
+Other Notes
+-----------
+
+init.bash was the result of frustrations from having to understand how
+bash was started in a large variety of situations. There are a number of
+diagrams mapping this out, but even if you go by the docs, you aren't
+going to get [the whole picture].
+
+I was frustrated by the fact that beginners have to have the difference
+between bash\_profile and bashrc explained carefully because they are
+nonintuitive, starting with their names. I was also frustrated that I
+couldn't properly anticipate what was going to happen when I ssh'ed a
+remote command or sudo'ed with varying options. I just wanted to stop
+having to think about it.
+
+I experimented with varying approaches. The first was to ensure that,
+similarly to how bash\_profile needs to source bashrc, that I sourced
+bash\_profile from bashrc (with loop detection of course). That really
+doesn't work, because it is both confusing as well as making the
+environment variables defeat interactive change by the user without some
+added cleverness.
+
+I finally realized that the invocation of the files was too limiting to
+accomplish what I wanted (consistency), and so I simply merged the files
+together and symlinked to one of them. It required conditionals to
+detect the varous bash modes with sections for the appropriate settings,
+but it worked much better. Unfortunately, it wasn't very modular and no
+one but me could read it. It was a mess, even with heavy commentary.
+
+init is my third revision. I'm much happier with it. The filenames
+clearly indicate what you should be concerned with putting in them. They
+are separate from the logic, so they are easy to read. I've created some
+utility functions which enhance the readability quite a bit compared to
+the original formulations of many of the statements, and reduce the
+reliance on variables (and the accompanying unset statements).
+
+If you like init, feel free to hack on it. I will probably not take many
+submissions, but it is meant to be maintainable enough that you can suit
+it to your purposes. It's a complete basis, but only a basis.
+
+Two notes about my functions. The first is that I employ UpperCamelCase
+for naming functions (and variables). Because init code has to play nice
+with whatever your apps provide, that is a simple and readable way to
+guarantee namespacing away from other code. Nobody uses it but me! (and
+now, perhaps you) It only takes a moment to get used to it once you
+understand the reason for it.
+
+The second note is that the library of utility functions
+(**lib/initutil.bash**) has its functions removed at the end of init so
+that they don't stick around in your shell session. The code knows to
+diff the names of the functions before and after the library is sourced,
+so it knows all of the functions defined in the library. At the end of
+init, it unsets all of these functions. If you want to add a function to
+the library, you can do so without worrying about having to clean it up;
+it will be cleaned up for you. If you don't want it cleaned up, don't
+put it in the library.
+
+  [the whole picture]: https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html

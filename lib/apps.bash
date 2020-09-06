@@ -22,8 +22,8 @@ for App in $AppList; do
   SplitSpace off
   Globbing off
 
-  TestAndSource $App/interactive.bash
   TestAndSource $App/cmds.bash
+  ShellIsInteractive && TestAndSource $App/interactive.bash
 done
 
 # clean up
