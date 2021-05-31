@@ -70,7 +70,7 @@ ORDER_BY_DEPENDENCIES () {
       continue
     }
 
-    for dep in $(ORDER_BY_DEPENDENCIES $(<$app/deps)); do
+    for dep in $(ORDER_BY_DEPENDENCIES <$app/deps); do
       (( ${satisfied[$dep]} )) && continue
       echo $dep
       satisfied[$dep]=1
